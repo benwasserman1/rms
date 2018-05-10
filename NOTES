@@ -1,0 +1,145 @@
+1. How does the looping mechanism work? Does each thread have it's own loop in doWork? How does this work for breaking only
+one thread if they don't? If they do, why does mine slow down when I try to break just one thread?
+
+separate thread for each and then call doWork
+
+while(flag) // this flag is going to be in the scheduler for when it's done
+sem.wait()
+for () // scale this
+doWork()
+
+2. How can I determine whether a thread is going to be finished running or not? Flag for this is best so think about it that way
+
+3. How to determine processor affinity for a mac??? This is probably going to be the biggest challenge. Look into other solutions (linux, etc.)
+
+
+/*
+Comment function
+*/
+// void *doWork(void *status) {
+//
+//   // int i = 0;
+//   int thread = (int)(intptr_t)status;
+//
+//   if (thread == 1) {
+//     while (first < 160) {
+//       sem_wait(thread1);
+//
+//       int s = 5;
+//       int k = 0;
+//       int x = 0;
+//
+//       first++;
+//
+//       for (int i = 0; i < 10; ++i) {
+//         for (int j = 0; j < 10; ++j) {
+//           // multiply board[0][0] by column 0, 5, 1, 6, 2, 7, 3, 8, 4, 9
+//           if (i % 2 == 0) {
+//             board[j][k] *= 1;
+//           }
+//           else {
+//             board[j][s] *= 1;
+//           }
+//         }
+//         if (i%2 == 0) {
+//           k+=1;
+//         }
+//         else {
+//           s+=1;
+//         }
+//       }
+//       thread1_count++;
+//     }
+//   }
+//   else if (thread == 2) {
+//     while (second < 80) {
+//       sem_wait(thread2);
+//
+//       int s = 5;
+//       int k = 0;
+//       int x = 0;
+//
+//       second++;
+//
+//       for (int i = 0; i < 10; ++i) {
+//         for (int j = 0; j < 10; ++j) {
+//           // multiply board[0][0] by column 0, 5, 1, 6, 2, 7, 3, 8, 4, 9
+//           if (i % 2 == 0) {
+//             board[j][k] *= 1;
+//           }
+//           else {
+//             board[j][s] *= 1;
+//           }
+//         }
+//         if (i%2 == 0) {
+//           k+=1;
+//         }
+//         else {
+//           s+=1;
+//         }
+//       }
+//       thread2_count++;
+//     }
+//   }
+//   else if (thread == 3) {
+//     while (third < 40) {
+//       sem_wait(thread3);
+//
+//       int s = 5;
+//       int k = 0;
+//       int x = 0;
+//
+//       third++;
+//
+//       for (int i = 0; i < 10; ++i) {
+//         for (int j = 0; j < 10; ++j) {
+//           // multiply board[0][0] by column 0, 5, 1, 6, 2, 7, 3, 8, 4, 9
+//           if (i % 2 == 0) {
+//             board[j][k] *= 1;
+//           }
+//           else {
+//             board[j][s] *= 1;
+//           }
+//         }
+//         if (i%2 == 0) {
+//           k+=1;
+//         }
+//         else {
+//           s+=1;
+//         }
+//       }
+//       thread3_count++;
+//     }
+//   }
+//   else if (thread == 4) {
+//     while (fourth < 10) {
+//       sem_wait(thread4);
+//
+//       int s = 5;
+//       int k = 0;
+//       int x = 0;
+//
+//       fourth++;
+//
+//       for (int i = 0; i < 10; ++i) {
+//         for (int j = 0; j < 10; ++j) {
+//           // multiply board[0][0] by column 0, 5, 1, 6, 2, 7, 3, 8, 4, 9
+//           if (i % 2 == 0) {
+//             board[j][k] *= 1;
+//           }
+//           else {
+//             board[j][s] *= 1;
+//           }
+//         }
+//         if (i%2 == 0) {
+//           k+=1;
+//         }
+//         else {
+//           s+=1;
+//         }
+//       }
+//       thread4_count++;
+//     }
+//   }
+//   pthread_exit(NULL);
+// }
