@@ -94,9 +94,7 @@ void *thread_first(void *status1) {
       break;
     }
     completion_check1 = 0;
-    if (thread1_count != 160) {
-      thread1_count++;
-    }
+    thread1_count++;
     for (int i = 0; i < 1; i++){
       doWork();
     }
@@ -112,10 +110,8 @@ void *thread_second(void *status2) {
       break;
     }
     completion_check2 = 0;
-    //if (thread2_count != 80) {
     thread2_count++;
-    //}
-    for (int i = 0; i < 70000; i++){
+    for (int i = 0; i < 80000; i++){
       doWork();
     }
   }
@@ -130,9 +126,7 @@ void *thread_third(void *status3) {
       break;
     }
     completion_check3 = 0;
-    //if (thread3_count != 40) {
     thread3_count++;
-    //}
     for (int i = 0; i < 4; i++){
       doWork();
     }
@@ -148,9 +142,7 @@ void *thread_fourth(void *status4) {
       break;
     }
     completion_check4 = 0;
-    //if (thread4_count != 10) {
     thread4_count++;
-    //}
     for (int i = 0; i < 16; i++){
       doWork();
     }
@@ -158,13 +150,15 @@ void *thread_fourth(void *status4) {
   pthread_exit(NULL);
 }
 
+
+// Issue is that the semaphore is calling sem_post too many times, so it's getting the 80 runs in no matter what. This is wrong
 void *schedule(void *status) {
     // could do a check with sem_getvalue() to make sure the
 
-    int *t1value;
-    int *t2value;
-    int *t3value;
-    int *t4value;
+    int t1value;
+    int t2value;
+    int t3value;
+    int t4value;
 
     int test;
 
@@ -178,45 +172,40 @@ void *schedule(void *status) {
           sem_post(thread1);
         }
         else {
-          // cout << "Here too " << endl;
-          // test = sem_getvalue(thread1, t1value);
-          // cout << "First one: " << test << endl;
-          // if (*t1value < 1) {
-          sem_post(thread1);
-          //}
+          test = sem_getvalue(thread1, &t1value); // This isn't catching up with things so I'm going to need to get rid of this
+          if (t1value < 1) {
+            sem_post(thread1);
+          }
           thread1_overrun++;
         }
         if (completion_check2 == 1) {
           sem_post(thread2);
         }
         else {
-          // test = sem_getvalue(thread2, t2value);
-          // cout << "Second 1: " << test << endl;
-          // if (*t2value < 1) {
-          sem_post(thread2);
-          //}
+          test = sem_getvalue(thread2, &t2value);
+          if (t2value < 1) {
+            sem_post(thread2);
+          }
           thread2_overrun++;
         }
         if (completion_check3 == 1) {
           sem_post(thread3);
         }
         else {
-          // test = sem_getvalue(thread3, t3value);
-          // cout << test << endl;
-          // if (*t3value < 1) {
-          sem_post(thread3);
-          //}
+          test = sem_getvalue(thread3, &t3value);
+          if (t3value < 1) {
+            sem_post(thread3);
+          }
           thread3_overrun++;
         }
         if (completion_check4 == 1) {
           sem_post(thread4);
         }
         else {
-          // test = sem_getvalue(thread4, t4value);
-          // cout << test << endl;
-          // if (*t4value < 1) {
-          sem_post(thread4);
-          //}
+          test = sem_getvalue(thread4, &t4value);
+          if (t4value < 1) {
+            sem_post(thread4);
+          }
           thread4_overrun++;
         }
       }
@@ -225,33 +214,30 @@ void *schedule(void *status) {
           sem_post(thread1);
         }
         else {
-          // test = sem_getvalue(thread1, t1value);
-          // cout << test << endl;
-          // if (*t1value < 1) {
-          sem_post(thread1);
-          //}
+          test = sem_getvalue(thread1, &t1value);
+          if (t1value < 1) {
+            sem_post(thread1);
+          }
           thread1_overrun++;
         }
         if (completion_check2 == 1) {
           sem_post(thread2);
         }
         else {
-          // test = sem_getvalue(thread2, t2value);
-          // cout << "Second 2: " << test << endl;
-          // if (*t2value < 1) {
-          sem_post(thread2);
-          //}
+          test = sem_getvalue(thread2, &t2value);
+          if (t2value < 1) {
+            sem_post(thread2);
+          }
           thread2_overrun++;
         }
         if (completion_check3 == 1) {
           sem_post(thread3);
         }
         else {
-          // test = sem_getvalue(thread3, t3value);
-          // cout << test << endl;
-          // if (*t3value < 1){
-          sem_post(thread3);
-          //}
+          test = sem_getvalue(thread3, &t3value);
+          if (t3value < 1){
+            sem_post(thread3);
+          }
           thread3_overrun++;
         }
       }
@@ -260,22 +246,20 @@ void *schedule(void *status) {
           sem_post(thread1);
         }
         else {
-          // test = sem_getvalue(thread1, t1value);
-          // cout << "Second 3: " << test << endl;
-          // if (*t1value < 1) {
-          sem_post(thread1);
-          //}
+          test = sem_getvalue(thread1, &t1value);
+          if (t1value < 1) {
+            sem_post(thread1);
+          }
           thread1_overrun++;
         }
         if (completion_check2 == 1) {
           sem_post(thread2);
         }
         else {
-          // test = sem_getvalue(thread2, t2value);
-          // cout << test << endl;
-          // if (*t2value < 1) {
-          sem_post(thread2);
-          //}
+          test = sem_getvalue(thread2, &t2value);
+          if (t2value < 1) {
+            sem_post(thread2);
+          }
           thread2_overrun++;
         }
       }
@@ -284,11 +268,10 @@ void *schedule(void *status) {
           sem_post(thread1);
         }
         else {
-          // test = sem_getvalue(thread1, t1value);
-          // cout << test << endl;
-          // if (*t1value < 1) {
-          sem_post(thread1);
-          //}
+          test = sem_getvalue(thread1, &t1value);
+          if (t1value < 1) {
+            sem_post(thread1);
+          }
           thread1_overrun++;
         }
       }
@@ -341,7 +324,7 @@ int main() { // Main thread here
   //Set scheduler thread priority
   pthread_attr_t tattr;
   int ret;
-  int newprio = 20;
+  int newprio = 1;
   sched_param param;
 
   /* initialized with default attributes */
@@ -391,7 +374,7 @@ int main() { // Main thread here
   int thread3 = 3;
   int thread4 = 4;
 
-  newprio = 10;
+  newprio = 2;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
 
@@ -401,7 +384,7 @@ int main() { // Main thread here
     return 1;
   }
 
-  newprio = 5;
+  newprio = 4;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
 
@@ -411,7 +394,7 @@ int main() { // Main thread here
     return 1;
   }
 
-  newprio = 2;
+  newprio = 8;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
 
@@ -421,7 +404,7 @@ int main() { // Main thread here
     return 1;
   }
 
-  newprio = 1;
+  newprio = 16;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
 
