@@ -12,6 +12,8 @@ Purpose of this source file:
 #include <pthread.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <semaphore.h>
 
 using namespace std;
@@ -104,10 +106,10 @@ void *thread_second(void *status2) {
     completion_check2 = 1;
     sem_wait(thread2);
     completion_check2 = 0;
-    if (thread2_count != 80) {
-      thread2_count++;
-    }
-    for (int i = 0; i < 2; i++){
+    //if (thread2_count != 80) {
+    thread2_count++;
+    //}
+    for (int i = 0; i < 70000; i++){
       doWork();
     }
   }
@@ -119,9 +121,9 @@ void *thread_third(void *status3) {
     completion_check3 = 1;
     sem_wait(thread3);
     completion_check3 = 0;
-    if (thread3_count != 40) {
-      thread3_count++;
-    }
+    //if (thread3_count != 40) {
+    thread3_count++;
+    //}
     for (int i = 0; i < 4; i++){
       doWork();
     }
@@ -134,9 +136,9 @@ void *thread_fourth(void *status4) {
     completion_check4 = 1;
     sem_wait(thread4);
     completion_check4 = 0;
-    if (thread4_count != 10) {
-      thread4_count++;
-    }
+    //if (thread4_count != 10) {
+    thread4_count++;
+    //}
     for (int i = 0; i < 16; i++){
       doWork();
     }
@@ -145,29 +147,138 @@ void *thread_fourth(void *status4) {
 }
 
 void *schedule(void *status) {
-    // Do the schedule thing that is in my notebook
+    // could do a check with sem_getvalue() to make sure the
+
+    int *t1value;
+    int *t2value;
+    int *t3value;
+    int *t4value;
+
+    int test;
 
     while (doWorkCount < 160) {
       usleep(10000);
+      cout << "in loop" << endl;
       // call threads and make appropriate checks
       // Who needs to run based on period
       if (doWorkCount % 16 == 0) {
-        sem_post(thread1);
-        sem_post(thread2);
-        sem_post(thread3);
-        sem_post(thread4);
+        if (completion_check1 == 1) {
+          sem_post(thread1);
+        }
+        else {
+          cout << "Here too " << endl;
+          test = sem_getvalue(thread1, t1value);
+          cout << "First one: " << test << endl;
+          if (*t1value < 1) {
+            sem_post(thread1);
+          }
+          thread1_overrun++;
+        }
+        if (completion_check2 == 1) {
+          sem_post(thread2);
+        }
+        else {
+          test = sem_getvalue(thread2, t2value);
+          cout << "Second 1: " << test << endl;
+          if (*t2value < 1) {
+            sem_post(thread2);
+          }
+          thread2_overrun++;
+        }
+        if (completion_check3 == 1) {
+          sem_post(thread3);
+        }
+        else {
+          test = sem_getvalue(thread3, t3value);
+          cout << test << endl;
+          if (*t3value < 1) {
+            sem_post(thread3);
+          }
+          thread3_overrun++;
+        }
+        if (completion_check4 == 1) {
+          sem_post(thread4);
+        }
+        else {
+          test = sem_getvalue(thread4, t4value);
+          cout << test << endl;
+          if (*t4value < 1) {
+            sem_post(thread4);
+          }
+          thread4_overrun++;
+        }
       }
       else if (doWorkCount % 4 == 0) {
-        sem_post(thread1);
-        sem_post(thread2);
-        sem_post(thread3);
+        if (completion_check1 == 1) {
+          sem_post(thread1);
+        }
+        else {
+          test = sem_getvalue(thread1, t1value);
+          cout << test << endl;
+          if (*t1value < 1) {
+            sem_post(thread1);
+          }
+          thread1_overrun++;
+        }
+        if (completion_check2 == 1) {
+          sem_post(thread2);
+        }
+        else {
+          test = sem_getvalue(thread2, t2value);
+          cout << "Second 2: " << test << endl;
+          if (*t2value < 1) {
+            sem_post(thread2);
+          }
+          thread2_overrun++;
+        }
+        if (completion_check3 == 1) {
+          sem_post(thread3);
+        }
+        else {
+          test = sem_getvalue(thread3, t3value);
+          cout << test << endl;
+          if (*t3value < 1){
+            sem_post(thread3);
+          }
+          thread3_overrun++;
+        }
       }
       else if (doWorkCount % 2 ==  0) {
-        sem_post(thread1);
-        sem_post(thread2);
+        if (completion_check1 == 1) {
+          sem_post(thread1);
+        }
+        else {
+          test = sem_getvalue(thread1, t1value);
+          cout << "Second 3: " << test << endl;
+          if (*t1value < 1) {
+            sem_post(thread1);
+          }
+          thread1_overrun++;
+        }
+        if (completion_check2 == 1) {
+          sem_post(thread2);
+        }
+        else {
+          test = sem_getvalue(thread2, t2value);
+          cout << test << endl;
+          if (*t2value < 1) {
+            sem_post(thread2);
+          }
+          thread2_overrun++;
+        }
       }
       else {
-        sem_post(thread1);
+        if (completion_check1 == 1) {
+          sem_post(thread1);
+        }
+        else {
+          test = sem_getvalue(thread1, t1value);
+          cout << test << endl;
+          if (*t1value < 1) {
+            sem_post(thread1);
+          }
+          thread1_overrun++;
+        }
       }
       doWorkCount++;
     }
@@ -185,10 +296,19 @@ int main() { // Main thread here
   printf("******* Welcome to our rate monotonic scheduler *********\n");
 
   // Initialize the semaphores
-  thread1 = sem_open("first_sem", O_CREAT| O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
-  thread2 = sem_open("second_sem", O_CREAT| O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
-  thread3 = sem_open("third_sem", O_CREAT| O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
-  thread4 = sem_open("fourth_sem", O_CREAT| O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
+  thread1 = sem_open("first_sem", O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
+  thread2 = sem_open("second_sem", O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
+
+  if (thread1 == SEM_FAILED) {
+    cout << "Failed thread" << endl;
+  }
+  if (thread2 == SEM_FAILED) {
+    cout << "Failed second thread" << endl;
+  }
+
+  thread3 = sem_open("third_sem", O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
+  thread4 = sem_open("fourth_sem", O_CREAT | O_CLOEXEC, S_IRUSR | S_IWUSR, 0);
+
 
   // int set1 = sem_post(thread1);
   // int set2 = sem_post(thread2);
@@ -230,13 +350,20 @@ int main() { // Main thread here
 
   // Set processor affinity for all
   cpu_set_t cpuset;
+  pthread_attr_init(&tattr);
   CPU_ZERO(&cpuset);
   CPU_SET(0, &cpuset);
-  sched = pthread_setaffinity_np(scheduler, sizeof(cpu_set_t), &cpuset);
-  one = pthread_setaffinity_np(first_thread, sizeof(cpu_set_t), &cpuset);
-  two = pthread_setaffinity_np(second_thread, sizeof(cpu_set_t), &cpuset);
-  three = pthread_setaffinity_np(third_thread, sizeof(cpu_set_t), &cpuset);
-  four = pthread_setaffinity_np(fourth_thread, sizeof(cpu_set_t), &cpuset);
+
+  int sched = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  cout << "Scheduler affinity: " << sched << endl;
+  int one = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  cout << "First thread affinity: " << one << endl;
+  int two = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  cout << "Second thread affinity: " << two << endl;
+  int three = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  cout << "Third thread affinity: " << three << endl;
+  int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  cout << "Fourth thread affinity: " << four << endl;
 
 
   void *status = 0;
@@ -309,5 +436,11 @@ int main() { // Main thread here
   printf("Second thread count: %d\n", thread2_count);
   printf("Third thread count: %d\n", thread3_count);
   printf("Fourth thread count: %d\n", thread4_count);
+
+  printf("First thread overrun: %d\n", thread1_overrun);
+  printf("Second thread overrun: %d\n", thread2_overrun);
+  printf("Third thread overrun: %d\n", thread3_overrun);
+  printf("Fourth thread overrun: %d\n", thread4_overrun);
+
 
 }
