@@ -6,6 +6,9 @@ May 6th, 2018
 Professor Joseph Hansen
 
 Purpose of this source file:
+
+The purpose of this source file is to implement a rate monotonic scheduler on
+top of the operating system.
 */
 
 #include <iostream>
@@ -111,7 +114,7 @@ void *thread_second(void *status2) {
     }
     completion_check2 = 0;
     thread2_count++;
-    for (int i = 0; i < 80000; i++){
+    for (int i = 0; i < 2; i++){
       doWork();
     }
   }
@@ -127,7 +130,7 @@ void *thread_third(void *status3) {
     }
     completion_check3 = 0;
     thread3_count++;
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < 80000; i++){
       doWork();
     }
   }
@@ -172,7 +175,7 @@ void *schedule(void *status) {
           sem_post(thread1);
         }
         else {
-          test = sem_getvalue(thread1, &t1value); // This isn't catching up with things so I'm going to need to get rid of this
+          test = sem_getvalue(thread1, &t1value);
           if (t1value < 1) {
             sem_post(thread1);
           }
@@ -324,17 +327,28 @@ int main() { // Main thread here
   //Set scheduler thread priority
   pthread_attr_t tattr;
   int ret;
-  int newprio = 1;
+  int newprio = 20;
   sched_param param;
 
   /* initialized with default attributes */
   ret = pthread_attr_init (&tattr);
 
   // /* safe to get existing scheduling param */
-  // ret = pthread_attr_getschedparam (&tattr, &param);
+  ret = pthread_attr_getschedparam (&tattr, &param);
 
   /* set the priority; others are unchanged */
   param.sched_priority = newprio;
+
+  int inheritsched;
+
+  inheritsched = PTHREAD_INHERIT_SCHED;
+  inheritsched = PTHREAD_EXPLICIT_SCHED;
+
+  ret = pthread_attr_setschedpolicy(&tattr, SCHED_OTHER);
+
+  // ret = pthread_attr_getinheritsched(&tattr, &inheritsched);
+  //
+  // cout << "Policy: " << ret << endl;
 
   /* setting the new scheduling param */
   ret = pthread_attr_setschedparam (&tattr, &param);
@@ -342,23 +356,23 @@ int main() { // Main thread here
 
   pthread_t scheduler;
 
+  int cpu_to_set = 4;
+
+  scheduler = pthread_self();
+  first_thread = pthread_self();
+  second_thread = pthread_self();
+  third_thread = pthread_self();
+  fourth_thread = pthread_self();
 
   // Set processor affinity for all
   cpu_set_t cpuset;
   pthread_attr_init(&tattr);
   CPU_ZERO(&cpuset);
-  CPU_SET(0, &cpuset);
+  CPU_SET(cpu_to_set, &cpuset);
+
 
   int sched = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
-  cout << "Scheduler affinity: " << sched << endl;
-  int one = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
-  cout << "First thread affinity: " << one << endl;
-  int two = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
-  cout << "Second thread affinity: " << two << endl;
-  int three = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
-  cout << "Third thread affinity: " << three << endl;
-  int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
-  cout << "Fourth thread affinity: " << four << endl;
+
 
 
   void *status = 0;
@@ -374,9 +388,17 @@ int main() { // Main thread here
   int thread3 = 3;
   int thread4 = 4;
 
-  newprio = 2;
+  newprio = 10;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
+
+  pthread_attr_init(&tattr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_to_set, &cpuset);
+  int one = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int two = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int three = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
 
   void *status1 = 0;
   if(pthread_create(&first_thread, &tattr, thread_first, (void *)(intptr_t)thread1)) {
@@ -388,15 +410,28 @@ int main() { // Main thread here
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
 
+  pthread_attr_init(&tattr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_to_set, &cpuset);
+  int two = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int three = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+
   void *status2 = 0;
   if(pthread_create(&second_thread, &tattr, thread_second,(void *)(intptr_t)thread2)) {
     fprintf(stderr, "Error creating thread 2\n");
     return 1;
   }
 
-  newprio = 8;
+  newprio = 2;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
+
+  pthread_attr_init(&tattr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_to_set, &cpuset);
+  int three = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
+  // int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
 
   void *status3 = 0;
   if(pthread_create(&third_thread, &tattr, thread_third, (void *)(intptr_t)thread3)) {
@@ -404,9 +439,14 @@ int main() { // Main thread here
     return 1;
   }
 
-  newprio = 16;
+  newprio = 1;
   param.sched_priority = newprio;
   ret = pthread_attr_setschedparam (&tattr, &param);
+
+  pthread_attr_init(&tattr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_to_set, &cpuset);
+  int four = pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
 
   void *status4 = 0;
   if(pthread_create(&fourth_thread, &tattr, thread_fourth, (void *)(intptr_t)thread4)) {
